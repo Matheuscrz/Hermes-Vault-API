@@ -1,0 +1,78 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '4.0.5'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.backend'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	// ── WEB -──────────────────────────────────────────────────────────────
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// ── VALIDAÇÃO ───────────────────────────────────────────────
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// ── EMAIL ─────────────────────────────────────────────────────
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    
+    // ── BANCO DE DADOS ─────────────────────────────────────────────────
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // ── VERSIONAMENTO DE SCHEMA (MIGRATIONS) ───────────────────────────
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+
+    // ── SEGURANÇA E JWT ────────────────────────────────────────────────
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.bouncycastle:bcprov-jdk18on:1.77'
+    
+    // JJWT para manipulação dos tokens
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+
+    // ── CACHE, RATE LIMIT E LOCKS (REDIS) ──────────────────────────────
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.redisson:redisson-spring-boot-starter:3.29.0'
+    implementation 'com.bucket4j:bucket4j-redis:8.10.1' // Para o Rate Limit contra Brute-Force
+
+    // ── MENSAGERIA ─────────────────────────────────────────────────────
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+
+    // ── STORAGE E ARQUIVOS (Para o futuro file context) ────────────────
+    implementation 'io.minio:minio:8.5.9'
+    implementation 'org.apache.tika:tika-core:2.9.2' // Para detectar Magic Bytes dos uploads
+
+    // ── OBSERVABILIDADE ────────────────────────────────────────────────
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'io.micrometer:micrometer-tracing-bridge-otel'
+    implementation 'io.opentelemetry:opentelemetry-exporter-otlp'
+    implementation 'net.logstash.logback:logstash-logback-encoder:7.4' // Logs JSON estruturados
+
+    // ── FERRAMENTAS ────────────────────────────────────────────────────
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    
+    // Testes
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework.amqp:spring-rabbit-test'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

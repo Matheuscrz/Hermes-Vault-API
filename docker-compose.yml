@@ -1,0 +1,139 @@
+services:
+  # ── BANCO DE DADOS E CACHE ──────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: vault_postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: vault_db
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - vault-network
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: vault_redis
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass redispassword
+    volumes:
+      - redis-data:/data
+    networks:
+      - vault-network
+
+  # ── MENSAGERIA E STORAGE ────────────────────────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: vault_rabbitmq
+    ports:
+      - "5672:5672" # Porta da aplicação
+      - "15672:15672" # Interface Web de gestão
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: adminpassword
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - vault-network
+
+  minio:
+    image: minio/minio:latest
+    container_name: vault_minio
+    ports:
+      - "9000:9000" # Porta da API (S3)
+      - "9001:9001" # Interface Web (Console)
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: adminpassword
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    networks:
+      - vault-network
+
+  # ── SERVIDOR DE EMAIL LOCAL (Para testar recuperação de senha) ──────────
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: vault_mailpit
+    ports:
+      - "1025:1025" # Porta SMTP para o Spring Boot enviar o email
+      - "8025:8025" # Interface Web para você ver os emails que chegaram
+    networks:
+      - vault-network
+
+  # ── OBSERVABILIDADE (Logs, Métricas e Traces) ───────────────────────────
+  loki:
+    image: grafana/loki:2.9.5
+    container_name: vault_loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki-data:/loki
+    networks:
+      - vault-network
+
+  promtail:
+    image: grafana/promtail:2.9.5
+    container_name: vault_promtail
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - vault-network
+
+  prometheus:
+    image: prom/prometheus:v2.50.1
+    container_name: vault_prometheus
+    ports:
+      - "9090:9090"
+    command: --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - prometheus-data:/prometheus
+    networks:
+      - vault-network
+
+  tempo:
+    image: grafana/tempo:2.4.1
+    container_name: vault_tempo
+    command: -config.file=/etc/tempo.yaml
+    ports:
+      - "4317:4317" # Porta OTLP gRPC para o Spring Boot enviar traces
+      - "3200:3200" # API do Tempo para o Grafana
+    volumes:
+      - tempo-data:/var/tempo
+      - ./tempo/tempo.yaml:/etc/tempo.yaml
+    networks:
+      - vault-network
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: vault_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - vault-network
+
+# ── DEFINIÇÃO DE REDES E VOLUMES PERSISTENTES ─────────────────────────────
+networks:
+  vault-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:
+  rabbitmq-data:
+  minio-data:
+  loki-data:
+  prometheus-data:
+  grafana-data:
+  tempo-data:
