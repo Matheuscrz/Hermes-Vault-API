@@ -95,11 +95,11 @@ src/main/java/com/hermes/backend/
 1. Clone o repositório:
 
    ```bash
-   git clone <url-do-repo>
-   cd hermes
+   git clone https://github.com/Matheuscrz/Hermes-Vault-API
+   cd Hermes-Vault-API
    ```
 
-2. Crie/ajuste o arquivo `.env` na raiz (já existe exemplo no projeto).
+2. Crie/ajuste o arquivo `.env` na raiz.
 
 3. Garanta que as portas abaixo estejam livres:
    - API: `8080`
